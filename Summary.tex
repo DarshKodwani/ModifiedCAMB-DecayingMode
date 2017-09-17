@@ -1,0 +1,274 @@
+\documentclass[12pt]{article}
+
+\usepackage[right=.75in, left=.75in, top=1in, bottom = 1 in]{geometry}
+
+\usepackage{mathptmx}
+\usepackage{times}
+
+\usepackage{mathtools}
+
+\usepackage{float}
+\usepackage{graphicx,epsfig}
+\pagestyle{plain}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{cite}
+\usepackage{color,colordvi}
+\usepackage{cancel}
+
+\usepackage{caption}
+\usepackage{subcaption}
+
+\usepackage{array, multirow}
+
+\newcommand{\RN}[1]{%
+  \textup{\uppercase\expandafter{\romannumeral#1}}%
+}
+
+
+\newcommand\myprop{\stackrel{\propto}{\mathclap{\scriptsize\mbox{GRF}}}}
+
+
+\usepackage[]{hyperref}
+\usepackage{xcolor}
+\hypersetup{
+    colorlinks,
+    linkcolor={black!50!black},
+    citecolor={blue!50!black},
+    urlcolor={blue!80!black}
+}
+
+\numberwithin{equation}{section}
+\title{Summary of decaying mode}
+\author{--}
+\date{ \today}
+
+\begin{document}
+
+\setlength{\belowcaptionskip}{2.0 pt}
+\setlength{\intextsep}{3.0 pt}
+
+\maketitle
+
+\tableofcontents
+
+\section{Introduction to decaying mode}
+
+%Write the equations for the decaying mode in Synchronus gauge. 
+%\\
+%Comparing the Cl's when $\omega$ is removed.
+%\begin{figure}[h!]
+%\begin{center}
+%\includegraphics[scale = 0.4]{Comparing_omtau.png}
+%\vspace{5mm}
+%\caption{Comparing the Cl's when $\omega$ is removed. }
+%\label{fig:1}
+%\end{center}
+%\end{figure}
+
+\section{Low $l$ divergence}
+
+We look at the divergence at low $l$ in CAMB and CLASS.
+
+\begin{figure}[ht]\centering
+        \begin{subfigure}{.5\textwidth}
+               \includegraphics[scale=0.2]{Decaying_mode_TE.png}
+               \caption{TE Cl's}
+                \label{fig:P1} 
+        \end{subfigure}%
+        \begin{subfigure}{.5\textwidth}
+                \includegraphics[scale=0.2]{Decaying_mode_EE.png}
+                \caption{EE Cl's}
+                \label{fig:P2}
+        \end{subfigure}
+	\begin{subfigure}{0.5\textwidth}
+                \includegraphics[scale=0.3]{Decaying_mode_TT.png}
+                \caption{TT Cl's}
+                \label{fig:P3}
+        \end{subfigure}
+       \caption{Decaying mode figures with $n_s = 0.96$} \label{fig:growing mode}
+\end{figure}
+
+\newpage 
+
+We now look at different spectral indices that are used in \cite{Amendola:2004rt} in CAMB. The "Model" Cl's are for the canonical cosmology
+
+\begin{figure}[ht]\centering
+        \begin{subfigure}{.5\textwidth}
+               \includegraphics[scale=0.2]{tilt_1.pdf}
+               \caption{TT decaying mode for tilt $n_s =1$}
+                \label{fig:P1} 
+        \end{subfigure}%
+        \begin{subfigure}{.5\textwidth}
+                \includegraphics[scale=0.2]{tilt_3.pdf}
+                \caption{TT decaying mode for tilt $n_s =3$}
+                \label{fig:P2}
+        \end{subfigure}
+       \caption{Decaying mode figures different tilts} \label{fig:growing mode}
+\end{figure}
+
+We now present the same spectral indices as in \cite{Amendola:2004rt} in CLASS. As Xin showed in class, the low l divergence goes away for $n_s = 4$, i.e the index is $k^3$. 
+This suggests, as expected, that there are some rogue factors of $k$ in the denominator for the decaying mode.
+There are also some differences in the decaying mode plots in class and camb as seen in figure \ref{cvsc}. It might just be a difference in normalization (Multipling the class Cl's by 4 makes them look similar at high l) but I am not sure yet. 
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale = 0.4]{class_camb_decay_tilt1.pdf}
+\vspace{5mm}
+\caption{Comparing the Cl's for the decaying mode for $n_s=1$ in class and camb along with the model Cl's. }
+\label{cvsc}
+\end{center}
+\end{figure}
+
+\section{Solutions attempted}
+
+\subsection{Change of gauge}
+
+Changing the gauge from Synchronus (as is used in CAMB) to Newtonian in CLASS we see no real difference in the Cl's.
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale = 0.6]{NvsS.pdf}
+\vspace{5mm}
+\caption{Cl's in Newtonian and Synchronus gauge.}
+\label{NvsS}
+\end{center}
+\end{figure}
+
+\newpage
+
+\subsection{Try to normalize the transfer function on sub horizon scales}
+
+Various attempts have been made to normalize the decaying mode. In particular we have tried to use the high k transfer functions to find a function of ell to normalize the Cl's by. It hasn't been successfull yet. 
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale = 0.4]{transfer_decayls.png}
+\vspace{5mm}
+\caption{Transfer function for the decaying mode for various ells.}
+\label{transfer_decay}
+\end{center}
+\end{figure}
+
+As a comparison, we have the growing mode transfer function:
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale = 0.5]{transfer_growingls.png}
+\vspace{5mm}
+\caption{Transfer function for the growing mode for various ells.}
+\label{transfer_grow}
+\end{center}
+\end{figure}
+
+\newpage
+
+\subsection{Change accuracy settings}
+
+Changing the accuracy settings does not effect the divergence at low $l$. 
+
+\begin{figure}[ht]\centering
+        \begin{subfigure}{.5\textwidth}
+               \includegraphics[scale=0.4]{time_sampling.png}
+               \caption{TE Cl's}
+                \label{tsamp} 
+        \end{subfigure}%
+        \begin{subfigure}{.5\textwidth}
+                \includegraphics[scale=0.4]{hierarchy_comparison.png}
+                \caption{EE Cl's}
+                \label{hsamp}
+        \end{subfigure}
+	\begin{subfigure}{0.5\textwidth}
+                \includegraphics[scale=0.3]{interpolation_comparison.png}
+                \caption{TT Cl's}
+                \label{isamp}
+        \end{subfigure}
+       \caption{Checking various accuracy settings in CAMB} \label{accuracy}
+\end{figure}
+
+
+\subsection{The transfer functions for different redshifts}
+
+Currently working on it - Daan provided first plots. 
+
+\newpage
+\subsection{Radiation dominated universe}
+
+We see that the photon density $\Delta_\gamma$ is effected by the decaying mode as seen in the density evolution plots. In particular the initial amplitude is much higher for the decaying mode. 
+
+ \begin{figure}[ht]\centering
+        \begin{subfigure}{.5\textwidth}
+               \includegraphics[scale=0.22]{background_desnities_kp02_decayingmode.png}
+               \caption{Decaying mode for $k=0.02$}
+                \label{gamma_d} 
+        \end{subfigure}%
+        \begin{subfigure}{.5\textwidth}
+                \includegraphics[scale=0.25]{background_desnities_kp02_growingmode.png}
+                \caption{Growing mode $k=0.02$}
+                \label{gamma_g}
+        \end{subfigure}
+       \caption{$\Delta_\gamma$ evolution for decaying and growing modes} \label{gamma_sampling}
+\end{figure}
+
+Furthermore we can look at the radiation dominated universe by increasing $N_{eff}$. 
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale = 0.5]{neff.png}
+\vspace{5mm}
+\caption{Cl's for a range of $N_{eff}$.}
+\label{Neff}
+\end{center}
+\end{figure}
+
+Doesn't effect the low l divergence. 
+\\
+\\
+Surprisingly it appears that the decaying and growing modes are in phase for $\Delta_\gamma$. One would expect the phase of the oscillation to be apparent in these modes. 
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale = 0.5]{gamma_comp01.pdf}
+\vspace{5mm}
+\caption{Comparing the evolution of $\Delta_\gamma$ for decaying and growing modes for $k = 0.1 \ Mpc^{-1}$.}
+\label{gamma_comp} 
+\end{center}
+\end{figure}
+
+\subsection{More to follow...}
+ 
+
+\begin{thebibliography}{99}
+
+%\cite{Amendola:2004rt}
+\bibitem{Amendola:2004rt}
+  L.~Amendola and F.~Finelli,
+  %``On the effects due to a decaying cosmological fluctuation,''
+  Phys.\ Rev.\ Lett.\  {\bf 94} (2005) 221303
+  doi:10.1103/PhysRevLett.94.221303
+  [astro-ph/0411273].
+  %%CITATION = doi:10.1103/PhysRevLett.94.221303;%%
+  %8 citations counted in INSPIRE as of 14 Sep 2017
+
+	
+
+\end{thebibliography}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{document}
