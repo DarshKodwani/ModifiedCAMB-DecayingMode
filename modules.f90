@@ -158,7 +158,9 @@
         real(dl) omegak
         real(dl) curv,r, Ksign !CP%r = 1/sqrt(|CP%curv|), CP%Ksign = 1,0 or -1
         real(dl) tau0,chi0 !time today and rofChi(CP%tau0/CP%r)
-
+	!PDM 2017
+	real(dl) :: Decay
+	logical :: PureDecay
     end type CAMBparams
 
     type(CAMBparams), save :: CP  !Global collection of parameters

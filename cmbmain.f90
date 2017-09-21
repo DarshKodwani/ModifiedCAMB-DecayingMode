@@ -1502,7 +1502,11 @@
 
         if (SourceNum==2) then
             !This is the innermost loop, so we separate the no lensing scalar case to optimize it
-            do n= Ranges_IndexOf(TimeSteps,tmin),min(IV%SourceSteps,Ranges_IndexOf(TimeSteps,tmax))
+            !PDM 2017 compute transfer function at earlier time:
+           !set time, set tau = 290 as an example
+           !write(*,*) "tmin:", tmin Note: tmin = 207
+           !force tmin to be lower: tmin = 100
+            do n= Ranges_IndexOf(TimeSteps,tmin), Ranges_IndexOf(TimeSteps,220._dl) !min(IV%SourceSteps,Ranges_IndexOf(TimeSteps,tmax))
                 a2=aa(n)
                 bes_ix=bes_index(n)
 
@@ -1518,6 +1522,7 @@
             if (HighAccuracyDefault) qmax_int=qmax_int*1.2
             DoInt = .not. CP%WantScalars .or. IV%q < qmax_int
             if (DoInt) then
+               
                 do n= Ranges_IndexOf(TimeSteps,tmin),min(IV%SourceSteps,Ranges_IndexOf(TimeSteps,tmax))
                     !Full Bessel integration
                     a2=aa(n)

@@ -293,6 +293,9 @@
     output_file_headers = Ini_Read_Logical('output_file_headers',output_file_headers)
 
     P%MassiveNuMethod  = Ini_Read_Int('massive_nu_approx',Nu_best)
+    !PDM 2017
+    P%Decay = Ini_Read_Double('decay')
+    P%PureDecay = Ini_Read_Logical('PureDecay',.false.)
 
     ThreadNum      = Ini_Read_Int('number_of_threads',ThreadNum)
     use_spline_template = Ini_Read_Logical('use_spline_template',use_spline_template)

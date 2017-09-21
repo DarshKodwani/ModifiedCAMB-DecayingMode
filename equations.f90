@@ -1665,39 +1665,43 @@
     D=0.2
     phase = 0
     !phase=1.573
-    gama=sqrt(32.*Rv/.5 -1)
+    gama=sqrt(32.*Rv/.5 -1.)
     gama2=gama*gama
     X=gama*log(x)/.2 + phase
     csn=cos(X)
     sn=sin(X)
-    h= x2 + D*x*xhalf*sin(X)
+    h= x2 + CP%Decay*x*xhalf*sin(X)
     !Modified equations
-    initv(1,i_clxg)= -chi*EV%Kf(1)*(x2/3.+ D*x*xhalf*sn/3.) !Check
-    initv(1,i_clxr)= -chi*EV%Kf(1)*(x2/3.- D*x*xhalf*(((1./4.)*Rv - 2./5.)*sn -(gama*csn)/(4.*Rv)) ) !Check 
-    initv(1,i_clxb)= -chi*EV%Kf(1)*(x2/4. + D*x*xhalf*sn/4.) !Check
+    initv(1,i_clxg)= -chi*EV%Kf(1)*(x2/3.+ CP%Decay*x*xhalf*sn/3.) !Check
+    initv(1,i_clxr)= -chi*EV%Kf(1)*(x2/3.- CP%Decay*x*xhalf*(((1./4.)*Rv - 2./5.)*sn -(gama*csn)/(4.*Rv)) ) !Check 
+    initv(1,i_clxb)= -chi*EV%Kf(1)*(x2/4. + CP%Decay*x*xhalf*sn/4.) !Check
     initv(1,i_clxc)=initv(1,i_clxb) !Check
-    initv(1,i_qg)= -chi*x2/27. + chi*(2.*D*x2*xhalf/(9.*(25.+gama2)))*(gama*csn - 5.*sn) !Check
-    initv(1,i_qr)=-chi*(EV%Kf(1)*(4.*Rv+23.)/Rp15*x3/27 - (D*xhalf/24.*Rv)*((-3. - 72.*Rv/5.)*sn+gama*(3.-8.*Rv/5.)*csn)) !Check (Whats up with the -chi? It should be chi according to the CAMB notes equation 46)
+    initv(1,i_qg)= -chi*x2/27. + chi*(2.*CP%Decay*x2*xhalf/(9.*(25.+gama2)))*(gama*csn - 5.*sn) !Check
+    initv(1,i_qr)=-chi*(EV%Kf(1)*(4.*Rv+23.)/Rp15*x3/27 - (CP%Decay*xhalf/24.*Rv)*((-3. - 72.*Rv/5.)*sn+gama*(3.-8.*Rv/5.)*csn)) !Check (Whats up with the -chi? It should be chi according to the CAMB notes equation 46)
     initv(1,i_vb)=0.75_dl*initv(1,i_qg) !Check
-    initv(1,i_pir)= chi*(4._dl/3*x2/Rp15 + (D/xhalf)*(gama*csn/2. + (11-16.*Rv/5.)*sn/10.)) !Check (again not sure about the sign of chi)
+    initv(1,i_pir)= chi*(4._dl/3*x2/Rp15 + (CP%Decay/xhalf)*(gama*csn/2. + (11-16.*Rv/5.)*sn/10.)) !Check (again not sure about the sign of chi)
     initv(1,i_aj3r)=chi*(4/21._dl/Rp15*x3) !Check 
-    initv(1,i_eta)=-chi*(2*EV%Kf(1)*(1 - x2/12*(-10._dl/Rp15 + EV%Kf(1))) + (D/xhalf)*((11-16.*Rv/5.)*sn/8. + 5.*gama*csn/8.)) !Check
+    initv(1,i_eta)=-chi*(2*EV%Kf(1)*(1 - x2/12*(-10._dl/Rp15 + EV%Kf(1))) + &
+         (CP%Decay/xhalf)*((11-16.*Rv/5.)*sn/8. + 5.*gama*csn/8.)) !Check
     !print *, 'The value for D is', D
     !print *, 'The value for phase is', phase
     !print *, chi
     
     !Modified equations for PURE decaying mode (i.e D = 1)
-    !initv(1,i_clxg)= -chi*EV%Kf(1)*(x*xhalf*sn/3.) !Check
-    !initv(1,i_clxr)= chi*x*xhalf*((1./4.*Rv - 2./5.)*sn -(gama*csn)/(4.*Rv) ) !Check     
-    !initv(1,i_clxb)= -chi*EV%Kf(1)*(x*xhalf*sn/4.) !Check
-    !initv(1,i_clxc)=initv(1,i_clxb) !Check
-    !initv(1,i_qg)=chi*(2.*x2*xhalf/(9.*(25+gama2)))*(gama*csn - 5.*sn) !Check
-    !initv(1,i_qr)=chi*((xhalf/24.*Rv)*((-3. - 72.*Rv/5.)*sn+gama*(3.-8.*Rv/5.)*csn)) !Check (Whats up with the -chi? It should be chi according to the CAMB notes equation 46)
-    !initv(1,i_vb)=0.75_dl*initv(1,i_qg) !Check
-    !initv(1,i_pir)=chi*((D/xhalf)*(gama*csn/2. + (11-16.*Rv/5.)*sn/10.)) !Check (again not sure about the sign of chi)
-    !initv(1,i_aj3r)=chi*(4/21._dl/Rp15*x3) !Check 
-    !initv(1,i_eta)=-chi*((D/xhalf)*((11-16.*Rv/5)*sn/8. + 5.*gama*csn/8.)) !Check
-
+    !PDM 2017
+    if(CP%PureDecay) then !will overwrite, should not matter
+    write(*,'(A48)') "****Computing spectra for pure decaying mode****"
+    initv(1,i_clxg)= -chi*EV%Kf(1)*(x*xhalf*sn/3.) !Check
+    initv(1,i_clxr)= chi*x*xhalf*((1./4.*Rv - 2./5.)*sn -(gama*csn)/(4.*Rv) ) !Check     
+    initv(1,i_clxb)= -chi*EV%Kf(1)*(x*xhalf*sn/4.) !Check
+    initv(1,i_clxc)=initv(1,i_clxb) !Check
+    initv(1,i_qg)=chi*(2.*x2*xhalf/(9.*(25+gama2)))*(gama*csn - 5.*sn) !Check
+    initv(1,i_qr)=chi*((xhalf/24.*Rv)*((-3. - 72.*Rv/5.)*sn+gama*(3.-8.*Rv/5.)*csn)) !Check (Whats up with the -chi? It should be chi according to the CAMB notes equation 46)
+    initv(1,i_vb)=0.75_dl*initv(1,i_qg) !Check
+    initv(1,i_pir)=chi*((D/xhalf)*(gama*csn/2. + (11-16.*Rv/5.)*sn/10.)) !Check (again not sure about the sign of chi)
+    initv(1,i_aj3r)=chi*(4/21._dl/Rp15*x3) !Check 
+    initv(1,i_eta)=-chi*((D/xhalf)*((11-16.*Rv/5)*sn/8. + 5.*gama*csn/8.)) !Check
+    endif 
     if (CP%Scalar_initial_condition/= initial_adiabatic) then
         !CDM isocurvature
 
