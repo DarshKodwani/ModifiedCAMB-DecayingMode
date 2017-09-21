@@ -1351,7 +1351,7 @@
     !  if (1/a-1 < 30) ISW=0
 
     !The rest, note y(9)->octg, yprime(9)->octgprime (octopoles)
-    sources(1)= ISW +  ((-9.D0/160.D0*pig-27.D0/80.D0*ypol(2))/k**2*opac(j)+ &
+    sources(1)=ISW+ ((-9.D0/160.D0*pig-27.D0/80.D0*ypol(2))/k**2*opac(j)+ &
         (11.D0/10.D0*sigma- 3.D0/8.D0*EV%Kf(2)*ypol(3)+vb-9.D0/80.D0*EV%Kf(2)*octg+3.D0/40.D0*qg)/k- &
         (-180.D0*ypolprime(2)-30.D0*pigdot)/k**2/160.D0)*dvis(j) + &
         (-(9.D0*pigdot+ 54.D0*ypolprime(2))/k**2*opac(j)/160.D0+pig/16.D0+clxg/4.D0+3.D0/8.D0*ypol(2) + &
@@ -1541,275 +1541,299 @@
 
     !cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
     subroutine initial(EV,y, tau)
-    !  Initial conditions.
-    use ThermoData
-    implicit none
+      !  Initial conditions.
+      use ThermoData
+      implicit none
 
-    type(EvolutionVars) EV
-    real(dl) y(EV%nvar)
-    real(dl) Rp15,tau,x,x2,x3,om,omtau, &
-        Rc,Rb,Rv,Rg,grhonu,chi, D, csn, gama, gama2, phase, sn, xhalf, h
-    real(dl) k,k2
-    real(dl) a,a2, iqg, rhomass,a_massive, ep
-    integer l,i, nu_i, j, ind
-    integer, parameter :: i_clxg=1,i_clxr=2,i_clxc=3, i_clxb=4, &
-        i_qg=5,i_qr=6,i_vb=7,i_pir=8, i_eta=9, i_aj3r=10,i_clxq=11,i_vq=12
-    integer, parameter :: i_max = i_vq
-    real(dl) initv(6,1:i_max), initvec(1:i_max)
+      type(EvolutionVars) EV
+      real(dl) y(EV%nvar)
+      real(dl) Rp15,tau,x,x2,x3,om,omtau, &
+           Rc,Rb,Rv,Rg,grhonu,chi, h
+      real(dl) k,k2
+      real(dl) a,a2, iqg, rhomass,a_massive, ep
+      integer l,i, nu_i, j, ind
+      integer, parameter :: i_clxg=1,i_clxr=2,i_clxc=3, i_clxb=4, &
+           i_qg=5,i_qr=6,i_vb=7,i_pir=8, i_eta=9, i_aj3r=10,i_clxq=11,i_vq=12
+      integer, parameter :: i_max = i_vq
+      real(dl) initv(6,1:i_max), initvec(1:i_max)
+      !PDM 2017
+      real(dl) :: argx
+      real(dl) :: dcsn, dgama, dgama2, dphase, dsn, xhalf
+      
+      nullify(EV%OutputTransfer) !Should not be needed, but avoids issues in ifort 14
 
-    nullify(EV%OutputTransfer) !Should not be needed, but avoids issues in ifort 14
+      if (CP%flat) then
+         EV%k_buf=EV%q
+         EV%k2_buf=EV%q2
+         EV%Kf(1:EV%MaxlNeeded)=1._dl !PDM: it is just one!!
+      else
+         EV%k2_buf=EV%q2-CP%curv
+         EV%k_buf=sqrt(EV%k2_buf)
 
-    if (CP%flat) then
-        EV%k_buf=EV%q
-        EV%k2_buf=EV%q2
-        EV%Kf(1:EV%MaxlNeeded)=1._dl
-    else
-        EV%k2_buf=EV%q2-CP%curv
-        EV%k_buf=sqrt(EV%k2_buf)
+         do l=1,EV%MaxlNeeded
+            EV%Kf(l)=1._dl-CP%curv*(l*(l+2))/EV%k2_buf !PDM: unless we are in a curved Universe
+         end do
+      end if
 
-        do l=1,EV%MaxlNeeded
-            EV%Kf(l)=1._dl-CP%curv*(l*(l+2))/EV%k2_buf
-        end do
-    end if
+      k=EV%k_buf
+      k2=EV%k2_buf
 
-    k=EV%k_buf
-    k2=EV%k2_buf
+      do j=1,EV%MaxlNeeded
+         EV%denlk(j)=denl(j)*k*j
+         EV%denlk2(j)=denl(j)*k*EV%Kf(j)*(j+1)
+         EV%polfack(j)=polfac(j)*k*EV%Kf(j)*denl(j)
+      end do
 
-    do j=1,EV%MaxlNeeded
-        EV%denlk(j)=denl(j)*k*j
-        EV%denlk2(j)=denl(j)*k*EV%Kf(j)*(j+1)
-        EV%polfack(j)=polfac(j)*k*EV%Kf(j)*denl(j)
-    end do
-
-    !Get time to switch off tight coupling
-    !The numbers here are a bit of guesswork
-    !The high k increase saves time for very small loss of accuracy
-    !The lower k ones are more delicate. Nead to avoid instabilities at same time
-    !as ensuring tight coupling is accurate enough
-    if (EV%k_buf > epsw) then
-        if (EV%k_buf > epsw*5) then
+      !Get time to switch off tight coupling
+      !The numbers here are a bit of guesswork
+      !The high k increase saves time for very small loss of accuracy
+      !The lower k ones are more delicate. Nead to avoid instabilities at same time
+      !as ensuring tight coupling is accurate enough
+      if (EV%k_buf > epsw) then
+         if (EV%k_buf > epsw*5) then
             ep=ep0*5/AccuracyBoost
             if (HighAccuracyDefault) ep = ep*0.65
-        else
+         else
             ep=ep0
-        end if
-    else
-        ep=ep0
-    end if
-    if (second_order_tightcoupling) ep=ep*2
-    EV%TightSwitchoffTime = min(tight_tau,Thermo_OpacityToTime(EV%k_buf/ep))
+         end if
+      else
+         ep=ep0
+      end if
+      if (second_order_tightcoupling) ep=ep*2
+      EV%TightSwitchoffTime = min(tight_tau,Thermo_OpacityToTime(EV%k_buf/ep))
 
 
-    y=0
+      y=0
 
-    !  k*tau, (k*tau)**2, (k*tau)**3
-    !Darsh 2017
-    x=k*tau
-    x2=x*x
-    x3=x2*x
-    xhalf=sqrt(x)
-    rhomass =  sum(grhormass(1:CP%Nu_mass_eigenstates))
-    grhonu=rhomass+grhornomass
+      !  k*tau, (k*tau)**2, (k*tau)**3
+      !Darsh 2017
+      x=k*tau
+      x2=x*x
+      x3=x2*x
+      xhalf=sqrt(x)
+      rhomass =  sum(grhormass(1:CP%Nu_mass_eigenstates))
+      grhonu=rhomass+grhornomass
 
-    om = (grhob+grhoc)/sqrt(3*(grhog+grhonu))
-    omtau=om*tau
-    Rv=grhonu/(grhonu+grhog)
+      om = (grhob+grhoc)/sqrt(3*(grhog+grhonu))
+      omtau=om*tau
+      Rv=grhonu/(grhonu+grhog)
 
-    Rg = 1-Rv
-    Rc=CP%omegac/(CP%omegac+CP%omegab)
-    Rb=1-Rc
-    Rp15=4*Rv+15
+      Rg = 1-Rv
+      Rc=CP%omegac/(CP%omegac+CP%omegab)
+      Rb=1-Rc
+      Rp15=4*Rv+15
 
-    if (CP%Scalar_initial_condition > initial_nummodes) &
-        call MpiStop('Invalid initial condition for scalar modes')
+      if (CP%Scalar_initial_condition > initial_nummodes) &
+           call MpiStop('Invalid initial condition for scalar modes')
 
-    a=tau*adotrad*(1+omtau/4)
-    a2=a*a
+      a=tau*adotrad*(1+omtau/4)
+      a2=a*a
 
-    initv=0
+      initv=0
 
-    !  Set adiabatic initial conditions
+      !PDM 2017; if decay param has non-zero value consider decaying + growing mode
+      if(CP%Decay .ne. 0.) then 
+         !Decaying mode 
 
-    chi=1  !Get transfer function for chi
-    !initv(1,i_clxg)=-chi*EV%Kf(1)/3*x2*(1-omtau/5)
-    !initv(1,i_clxr)= initv(1,i_clxg)
-    !initv(1,i_clxb)=0.75_dl*initv(1,i_clxg)
-    !initv(1,i_clxc)=initv(1,i_clxb)
-    !initv(1,i_qg)=initv(1,i_clxg)*x/9._dl
-    !initv(1,i_qr)=-chi*EV%Kf(1)*(4*Rv+23)/Rp15*x3/27
-    !initv(1,i_vb)=0.75_dl*initv(1,i_qg)
-    !initv(1,i_pir)=chi*4._dl/3*x2/Rp15*(1+omtau/4*(4*Rv-5)/(2*Rv+15))
-    !initv(1,i_aj3r)=chi*4/21._dl/Rp15*x3
-    !initv(1,i_eta)=-chi*2*EV%Kf(1)*(1 - x2/12*(-10._dl/Rp15 + EV%Kf(1)))
-    
-    !Darsh 2017
-    !Removing omega (omtau)
-    !initv(1,i_clxg)=-chi*EV%Kf(1)/3*x2
-    !initv(1,i_clxr)= initv(1,i_clxg)
-    !initv(1,i_clxb)=0.75_dl*initv(1,i_clxg)
-    !initv(1,i_clxc)=initv(1,i_clxb)
-    !initv(1,i_qg)=initv(1,i_clxg)*x/9._dl
-    !initv(1,i_qr)=-chi*EV%Kf(1)*(4*Rv+23)/Rp15*x3/27
-    !initv(1,i_vb)=0.75_dl*initv(1,i_qg)
-    !initv(1,i_pir)=chi*4._dl/3*x2/Rp15
-    !initv(1,i_aj3r)=chi*4/21._dl/Rp15*x3
-    !initv(1,i_eta)=-chi*2*EV%Kf(1)*(1 - x2/12*(-10._dl/Rp15 + EV%Kf(1)))
-    !print *, 'The value for ktau is', x
-    !print *, 'The value for omtau is', omtau 
-    !print *, 'The value for beta2 is', EV%Kf(1)
-    !print *, SQRT(2.)
-    
-    !Decaying mode 
-    
-    !Defining variables
-    D=0.2
-    phase = 0
-    !phase=1.573
-    gama=sqrt(32.*Rv/.5 -1.)
-    gama2=gama*gama
-    X=gama*log(x)/.2 + phase
-    csn=cos(X)
-    sn=sin(X)
-    h= x2 + CP%Decay*x*xhalf*sin(X)
-    !Modified equations
-    initv(1,i_clxg)= -chi*EV%Kf(1)*(x2/3.+ CP%Decay*x*xhalf*sn/3.) !Check
-    initv(1,i_clxr)= -chi*EV%Kf(1)*(x2/3.- CP%Decay*x*xhalf*(((1./4.)*Rv - 2./5.)*sn -(gama*csn)/(4.*Rv)) ) !Check 
-    initv(1,i_clxb)= -chi*EV%Kf(1)*(x2/4. + CP%Decay*x*xhalf*sn/4.) !Check
-    initv(1,i_clxc)=initv(1,i_clxb) !Check
-    initv(1,i_qg)= -chi*x2/27. + chi*(2.*CP%Decay*x2*xhalf/(9.*(25.+gama2)))*(gama*csn - 5.*sn) !Check
-    initv(1,i_qr)=-chi*(EV%Kf(1)*(4.*Rv+23.)/Rp15*x3/27 - (CP%Decay*xhalf/24.*Rv)*((-3. - 72.*Rv/5.)*sn+gama*(3.-8.*Rv/5.)*csn)) !Check (Whats up with the -chi? It should be chi according to the CAMB notes equation 46)
-    initv(1,i_vb)=0.75_dl*initv(1,i_qg) !Check
-    initv(1,i_pir)= chi*(4._dl/3*x2/Rp15 + (CP%Decay/xhalf)*(gama*csn/2. + (11-16.*Rv/5.)*sn/10.)) !Check (again not sure about the sign of chi)
-    initv(1,i_aj3r)=chi*(4/21._dl/Rp15*x3) !Check 
-    initv(1,i_eta)=-chi*(2*EV%Kf(1)*(1 - x2/12*(-10._dl/Rp15 + EV%Kf(1))) + &
-         (CP%Decay/xhalf)*((11-16.*Rv/5.)*sn/8. + 5.*gama*csn/8.)) !Check
-    !print *, 'The value for D is', D
-    !print *, 'The value for phase is', phase
-    !print *, chi
-    
-    !Modified equations for PURE decaying mode (i.e D = 1)
-    !PDM 2017
-    if(CP%PureDecay) then !will overwrite, should not matter
-    write(*,'(A48)') "****Computing spectra for pure decaying mode****"
-    initv(1,i_clxg)= -chi*EV%Kf(1)*(x*xhalf*sn/3.) !Check
-    initv(1,i_clxr)= chi*x*xhalf*((1./4.*Rv - 2./5.)*sn -(gama*csn)/(4.*Rv) ) !Check     
-    initv(1,i_clxb)= -chi*EV%Kf(1)*(x*xhalf*sn/4.) !Check
-    initv(1,i_clxc)=initv(1,i_clxb) !Check
-    initv(1,i_qg)=chi*(2.*x2*xhalf/(9.*(25+gama2)))*(gama*csn - 5.*sn) !Check
-    initv(1,i_qr)=chi*((xhalf/24.*Rv)*((-3. - 72.*Rv/5.)*sn+gama*(3.-8.*Rv/5.)*csn)) !Check (Whats up with the -chi? It should be chi according to the CAMB notes equation 46)
-    initv(1,i_vb)=0.75_dl*initv(1,i_qg) !Check
-    initv(1,i_pir)=chi*((D/xhalf)*(gama*csn/2. + (11-16.*Rv/5.)*sn/10.)) !Check (again not sure about the sign of chi)
-    initv(1,i_aj3r)=chi*(4/21._dl/Rp15*x3) !Check 
-    initv(1,i_eta)=-chi*((D/xhalf)*((11-16.*Rv/5)*sn/8. + 5.*gama*csn/8.)) !Check
-    endif 
-    if (CP%Scalar_initial_condition/= initial_adiabatic) then
-        !CDM isocurvature
+         !Defining variables
+         dphase = 0.0
+         !phase=1.573
+         chi=1  !Get transfer function for chi
 
-        initv(2,i_clxg)= Rc*omtau*(-2._dl/3 + omtau/4)
-        initv(2,i_clxr)=initv(2,i_clxg)
-        initv(2,i_clxb)=initv(2,i_clxg)*0.75_dl
-        initv(2,i_clxc)=1+initv(2,i_clxb)
-        initv(2,i_qg)=-Rc/9*omtau*x
-        initv(2,i_qr)=initv(2,i_qg)
-        initv(2,i_vb)=0.75_dl*initv(2,i_qg)
-        initv(2,i_pir)=-Rc*omtau*x2/3/(2*Rv+15._dl)
-        initv(2,i_eta)= Rc*omtau*(1._dl/3 - omtau/8)*EV%Kf(1)
-        initv(2,i_aj3r)=0
-        
-        !Baryon isocurvature
-        if (Rc==0) call MpiStop('Isocurvature initial conditions assume non-zero dark matter')
+         dgama=sqrt(32.*Rv/5. -1.)
+         dgama2=dgama*dgama
+         argx=dgama*log(x)/2. + dphase
+         dcsn=cos(argx)
+         dsn=sin(argx)
 
-        initv(3,:) = initv(2,:)*(Rb/Rc)
-        initv(3,i_clxc) = initv(3,i_clxb)
-        initv(3,i_clxb)= initv(3,i_clxb)+1
+         !h= x2 + CP%Decay*x*xhalf*sin(argx)
 
-        !neutrino isocurvature density mode
+         !Modified equations
+         !note to self (PDM): not sure if we should include the factor EV%Kf(1) in the decaying mode or not. It is 1
+         !for a flat Universe, so I guess it does not matter now
+         initv(1,i_clxg) =-chi*EV%Kf(1)/3.*x2*(1.+ CP%Decay/xhalf*dsn) !Check
+         initv(1,i_clxr) =-chi*EV%Kf(1)*x2/3.*(1.+ CP%Decay/xhalf*((4*Rv-5)/20./Rv*dsn + (dgama*dcsn)/(4.*Rv)) ) !Check 
+         initv(1,i_clxb) = 0.75_dl*initv(1,i_clxg)!Check
+         initv(1,i_clxc) = initv(1,i_clxb)        !Check
+         initv(1,i_qg)   =-chi*x2/27. + chi*(2.*CP%Decay*x2*xhalf/(9.*(25.+dgama2)))*(dgama*dcsn - 5.*dsn) !Check
+         initv(1,i_qr)   =-chi*EV%Kf(1)*((4.*Rv+23.)/Rp15*x3/27 + (CP%Decay*xhalf/24.*Rv)*((-3. - 72.*Rv/5.)*dsn + &
+              dgama*(3.-8.*Rv/5.)*dcsn)) !Check 
+         initv(1,i_vb)   = 0.75_dl*initv(1,i_qg) !Check; PDM not sure about this. 
+         initv(1,i_pir)  = chi*(4._dl/3*x2/Rp15 + (CP%Decay/xhalf)*(dgama*dcsn/2. + (11-16.*Rv/5.)*dsn/10.)) !Check
+         initv(1,i_aj3r) = chi*(4/21._dl/Rp15*x3) !Check 
+         initv(1,i_eta)  =-chi*EV%Kf(1)*(2*(1. - x2/12*(-10._dl/Rp15 + EV%Kf(1))) + &
+              (CP%Decay/xhalf)*((11-16.*Rv/5.)*dsn/8. + 5.*dgama*dcsn/8.)) !Check
 
-        initv(4,i_clxg)=Rv/Rg*(-1 + x2/6)
-        initv(4,i_clxr)=1-x2/6
-        initv(4,i_clxc)=-omtau*x2/80*Rv*Rb/Rg
-        initv(4,i_clxb)= Rv/Rg/8*x2
-        iqg = - Rv/Rg*(x/3 - Rb/4/Rg*omtau*x)
-        initv(4,i_qg) =iqg
-        initv(4,i_qr) = x/3
-        initv(4,i_vb)=0.75_dl*iqg
-        initv(4,i_pir)=x2/Rp15
-        initv(4,i_eta)=EV%Kf(1)*Rv/Rp15/3*x2
+      else !just consider growing mode
 
-        !neutrino isocurvature velocity mode
+         chi=1  !Get transfer function for chi
+         initv(1,i_clxg) =-chi*EV%Kf(1)/3*x2*(1-omtau/5)
+         initv(1,i_clxr) = initv(1,i_clxg)
+         initv(1,i_clxb) = 0.75_dl*initv(1,i_clxg)
+         initv(1,i_clxc) = initv(1,i_clxb)
+         initv(1,i_qg)   = initv(1,i_clxg)*x/9._dl
+         initv(1,i_qr)   =-chi*EV%Kf(1)*(4*Rv+23)/Rp15*x3/27
+         initv(1,i_vb)   = 0.75_dl*initv(1,i_qg)
+         initv(1,i_pir)  = chi*4._dl/3*x2/Rp15*(1+omtau/4*(4*Rv-5)/(2*Rv+15))
+         initv(1,i_aj3r) = chi*4/21._dl/Rp15*x3
+         initv(1,i_eta)  =-chi*2*EV%Kf(1)*(1 - x2/12*(-10._dl/Rp15 + EV%Kf(1)))
+      endif
+      !Darsh 2017
+      !Removing omega (omtau)
+      !initv(1,i_clxg)=-chi*EV%Kf(1)/3*x2
+      !initv(1,i_clxr)= initv(1,i_clxg)
+      !initv(1,i_clxb)=0.75_dl*initv(1,i_clxg)
+      !initv(1,i_clxc)=initv(1,i_clxb)
+      !initv(1,i_qg)=initv(1,i_clxg)*x/9._dl
+      !initv(1,i_qr)=-chi*EV%Kf(1)*(4*Rv+23)/Rp15*x3/27
+      !initv(1,i_vb)=0.75_dl*initv(1,i_qg)
+      !initv(1,i_pir)=chi*4._dl/3*x2/Rp15
+      !initv(1,i_aj3r)=chi*4/21._dl/Rp15*x3
+      !initv(1,i_eta)=-chi*2*EV%Kf(1)*(1 - x2/12*(-10._dl/Rp15 + EV%Kf(1)))
+      !print *, 'The value for ktau is', x
+      !print *, 'The value for omtau is', omtau 
+      !print *, 'The value for beta2 is', EV%Kf(1)
+      !print *, SQRT(2.)
 
-        initv(5,i_clxg)=Rv/Rg*x - 2*x*omtau/16*Rb*(2+Rg)/Rg**2
-        initv(5,i_clxr)=-x -3*x*omtau*Rb/16/Rg
-        initv(5,i_clxc)=-9*omtau*x/64*Rv*Rb/Rg
-        initv(5,i_clxb)= 3*Rv/4/Rg*x - 9*omtau*x/64*Rb*(2+Rg)/Rg**2
-        iqg = Rv/Rg*(-1 + 3*Rb/4/Rg*omtau+x2/6 +3*omtau**2/16*Rb/Rg**2*(Rg-3*Rb))
-        initv(5,i_qg) =iqg
-        initv(5,i_qr) = 1 - x2/6*(1+4*EV%Kf(1)/(4*Rv+5))
-        initv(5,i_vb)=0.75_dl*iqg
-        initv(5,i_pir)=2*x/(4*Rv+5)+omtau*x*6/Rp15/(4*Rv+5)
-        initv(5,i_eta)=2*EV%Kf(1)*x*Rv/(4*Rv+5) + omtau*x*3*EV%Kf(1)*Rv/32*(Rb/Rg - 80/Rp15/(4*Rv+5))
-        initv(5,i_aj3r) = 3._dl/7*x2/(4*Rv+5)
 
-        !quintessence isocurvature mode
-    end if
+      !print *, 'The value for D is', D
+      !print *, 'The value for phase is', phase
+      !print *, chi
 
-    if (CP%Scalar_initial_condition==initial_vector) then
-        InitVec = 0
-        do i=1,initial_nummodes
+      !Modified equations for PURE decaying mode (i.e D = 1)
+      !PDM 2017
+      if(CP%PureDecay) then !will overwrite, should not matter
+         write(*,'(A48)') "****Computing spectra for pure decaying mode****"
+         chi=1
+         dphase = 0.0
+         !phase=1.573
+         chi=1  !Get transfer function for chi
+
+         dgama=sqrt(32.*Rv/5. -1.)
+         dgama2=dgama*dgama
+         argx=dgama*log(x)/2. + dphase
+         dcsn=cos(argx)
+         dsn=sin(argx)
+         initv(1,i_clxg) =-chi*EV%Kf(1)/3.*x2/xhalf*dsn !Check
+         initv(1,i_clxr) =-chi*EV%Kf(1)*x2/3./xhalf*((4*Rv-5)/20./Rv*dsn + (dgama*dcsn)/(4.*Rv))  !Check 
+         initv(1,i_clxb) = 0.75_dl*initv(1,i_clxg)!Check
+         initv(1,i_clxc) = initv(1,i_clxb)        !Check
+         initv(1,i_qg)   = chi*(2.*x2*xhalf/(9.*(25.+dgama2)))*(dgama*dcsn - 5.*dsn) !Check
+         initv(1,i_qr)   =-chi*EV%Kf(1)*((xhalf/24.*Rv)*((-3. - 72.*Rv/5.)*dsn + dgama*(3.-8.*Rv/5.)*dcsn)) !Check 
+         initv(1,i_vb)   = 0.75_dl*initv(1,i_qg) !Check; PDM not sure about this. 
+         initv(1,i_pir)  = chi*(1./xhalf*(dgama*dcsn/2. + (11-16.*Rv/5.)*dsn/10.)) !Check
+         initv(1,i_aj3r) = chi*(4/21._dl/Rp15*x3) !Check 
+         initv(1,i_eta)  =-chi*EV%Kf(1)*((1./xhalf)*((11-16.*Rv/5.)*dsn/8. + 5.*dgama*dcsn/8.)) !Check
+      endif
+      
+      if (CP%Scalar_initial_condition/= initial_adiabatic) then
+         !CDM isocurvature
+
+         initv(2,i_clxg)= Rc*omtau*(-2._dl/3 + omtau/4)
+         initv(2,i_clxr)=initv(2,i_clxg)
+         initv(2,i_clxb)=initv(2,i_clxg)*0.75_dl
+         initv(2,i_clxc)=1+initv(2,i_clxb)
+         initv(2,i_qg)=-Rc/9*omtau*x
+         initv(2,i_qr)=initv(2,i_qg)
+         initv(2,i_vb)=0.75_dl*initv(2,i_qg)
+         initv(2,i_pir)=-Rc*omtau*x2/3/(2*Rv+15._dl)
+         initv(2,i_eta)= Rc*omtau*(1._dl/3 - omtau/8)*EV%Kf(1)
+         initv(2,i_aj3r)=0
+
+         !Baryon isocurvature
+         if (Rc==0) call MpiStop('Isocurvature initial conditions assume non-zero dark matter')
+
+         initv(3,:) = initv(2,:)*(Rb/Rc)
+         initv(3,i_clxc) = initv(3,i_clxb)
+         initv(3,i_clxb)= initv(3,i_clxb)+1
+
+         !neutrino isocurvature density mode
+
+         initv(4,i_clxg)=Rv/Rg*(-1 + x2/6)
+         initv(4,i_clxr)=1-x2/6
+         initv(4,i_clxc)=-omtau*x2/80*Rv*Rb/Rg
+         initv(4,i_clxb)= Rv/Rg/8*x2
+         iqg = - Rv/Rg*(x/3 - Rb/4/Rg*omtau*x)
+         initv(4,i_qg) =iqg
+         initv(4,i_qr) = x/3
+         initv(4,i_vb)=0.75_dl*iqg
+         initv(4,i_pir)=x2/Rp15
+         initv(4,i_eta)=EV%Kf(1)*Rv/Rp15/3*x2
+
+         !neutrino isocurvature velocity mode
+
+         initv(5,i_clxg)=Rv/Rg*x - 2*x*omtau/16*Rb*(2+Rg)/Rg**2
+         initv(5,i_clxr)=-x -3*x*omtau*Rb/16/Rg
+         initv(5,i_clxc)=-9*omtau*x/64*Rv*Rb/Rg
+         initv(5,i_clxb)= 3*Rv/4/Rg*x - 9*omtau*x/64*Rb*(2+Rg)/Rg**2
+         iqg = Rv/Rg*(-1 + 3*Rb/4/Rg*omtau+x2/6 +3*omtau**2/16*Rb/Rg**2*(Rg-3*Rb))
+         initv(5,i_qg) =iqg
+         initv(5,i_qr) = 1 - x2/6*(1+4*EV%Kf(1)/(4*Rv+5))
+         initv(5,i_vb)=0.75_dl*iqg
+         initv(5,i_pir)=2*x/(4*Rv+5)+omtau*x*6/Rp15/(4*Rv+5)
+         initv(5,i_eta)=2*EV%Kf(1)*x*Rv/(4*Rv+5) + omtau*x*3*EV%Kf(1)*Rv/32*(Rb/Rg - 80/Rp15/(4*Rv+5))
+         initv(5,i_aj3r) = 3._dl/7*x2/(4*Rv+5)
+
+         !quintessence isocurvature mode
+      end if
+
+      if (CP%Scalar_initial_condition==initial_vector) then
+         InitVec = 0
+         do i=1,initial_nummodes
             InitVec = InitVec+ initv(i,:)*CP%InitialConditionVector(i)
-        end do
-    else
-        InitVec = initv(CP%Scalar_initial_condition,:)
-        if (CP%Scalar_initial_condition==initial_adiabatic) InitVec = -InitVec
-        !So we start with chi=-1 as before
-    end if
+         end do
+      else
+         InitVec = initv(CP%Scalar_initial_condition,:)
+         if (CP%Scalar_initial_condition==initial_adiabatic) InitVec = -InitVec
+         !So we start with chi=-1 as before
+      end if
 
-    y(1)=a
-    y(2)= -InitVec(i_eta)*k/2
-    !get eta_s*k, where eta_s is synchronous gauge variable
+      y(1)=a
+      y(2)= -InitVec(i_eta)*k/2
+      !get eta_s*k, where eta_s is synchronous gauge variable
 
-    !  CDM
-    y(3)=InitVec(i_clxc)
+      !  CDM
+      y(3)=InitVec(i_clxc)
 
-    !  Baryons
-    y(4)=InitVec(i_clxb)
-    y(5)=InitVec(i_vb)
+      !  Baryons
+      y(4)=InitVec(i_clxb)
+      y(5)=InitVec(i_vb)
 
-    !  Photons
-    y(EV%g_ix)=InitVec(i_clxg)
-    y(EV%g_ix+1)=InitVec(i_qg)
+      !  Photons
+      y(EV%g_ix)=InitVec(i_clxg)
+      y(EV%g_ix+1)=InitVec(i_qg)
 
-    if (w_lam /= -1 .and. w_Perturb) then
-        y(EV%w_ix) = InitVec(i_clxq)
-        y(EV%w_ix+1) = InitVec(i_vq)
-    end if
+      if (w_lam /= -1 .and. w_Perturb) then
+         y(EV%w_ix) = InitVec(i_clxq)
+         y(EV%w_ix+1) = InitVec(i_vq)
+      end if
 
-    !  Neutrinos
-    y(EV%r_ix)=InitVec(i_clxr)
-    y(EV%r_ix+1)=InitVec(i_qr)
-    y(EV%r_ix+2)=InitVec(i_pir)
+      !  Neutrinos
+      y(EV%r_ix)=InitVec(i_clxr)
+      y(EV%r_ix+1)=InitVec(i_qr)
+      y(EV%r_ix+2)=InitVec(i_pir)
 
-    if (EV%lmaxnr>2) then
-        y(EV%r_ix+3)=InitVec(i_aj3r)
-    endif
+      if (EV%lmaxnr>2) then
+         y(EV%r_ix+3)=InitVec(i_aj3r)
+      endif
 
-    if (CP%Num_Nu_massive == 0) return
+      if (CP%Num_Nu_massive == 0) return
 
-    do nu_i = 1, CP%Nu_mass_eigenstates
-        EV%MassiveNuApproxTime(nu_i) = Nu_tau_massive(nu_i)
-        a_massive =  20000*k/nu_masses(nu_i)*AccuracyBoost*lAccuracyBoost
-        if (a_massive >=0.99) then
+      do nu_i = 1, CP%Nu_mass_eigenstates
+         EV%MassiveNuApproxTime(nu_i) = Nu_tau_massive(nu_i)
+         a_massive =  20000*k/nu_masses(nu_i)*AccuracyBoost*lAccuracyBoost
+         if (a_massive >=0.99) then
             EV%MassiveNuApproxTime(nu_i)=CP%tau0+1
-        else if (a_massive > 17.d0/nu_masses(nu_i)*AccuracyBoost) then
+         else if (a_massive > 17.d0/nu_masses(nu_i)*AccuracyBoost) then
             EV%MassiveNuApproxTime(nu_i)=max(EV%MassiveNuApproxTime(nu_i),DeltaTime(0._dl,a_massive, 0.01_dl))
-        end if
-        ind = EV%nu_ix(nu_i)
-        do  i=1,EV%nq(nu_i)
+         end if
+         ind = EV%nu_ix(nu_i)
+         do  i=1,EV%nq(nu_i)
             y(ind:ind+2)=y(EV%r_ix:EV%r_ix+2)
             if (EV%lmaxnu_tau(nu_i)>2) y(ind+3)=InitVec(i_aj3r)
             ind = ind + EV%lmaxnu_tau(nu_i)+1
-        end do
-    end do
+         end do
+      end do
 
     end subroutine initial
 

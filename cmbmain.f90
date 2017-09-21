@@ -1506,7 +1506,7 @@
            !set time, set tau = 290 as an example
            !write(*,*) "tmin:", tmin Note: tmin = 207
            !force tmin to be lower: tmin = 100
-            do n= Ranges_IndexOf(TimeSteps,tmin), Ranges_IndexOf(TimeSteps,220._dl) !min(IV%SourceSteps,Ranges_IndexOf(TimeSteps,tmax))
+            do n= Ranges_IndexOf(TimeSteps,tmin), min(IV%SourceSteps,Ranges_IndexOf(TimeSteps,tmax)) !Ranges_IndexOf(TimeSteps,220._dl) !min(IV%SourceSteps,Ranges_IndexOf(TimeSteps,tmax))
                 a2=aa(n)
                 bes_ix=bes_index(n)
 
