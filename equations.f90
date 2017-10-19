@@ -1636,8 +1636,8 @@
          !Decaying mode 
 
          !Defining variables
-         dphase = 0.0
-         !phase=1.573
+         dphase = 0.785
+         !phase=0.785
          chi=1  !Get transfer function for chi
 
          dgama=sqrt(32.*Rv/5. -1.)
