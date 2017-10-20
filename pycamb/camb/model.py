@@ -244,7 +244,10 @@ class CAMBparams(CAMB_Structure):
         ("r", c_double),
         ("Ksign", c_double),
         ("tau0", c_double),
-        ("chi0", c_double)
+        ("chi0", c_double),
+	#Darsh 2017: putting in decaying mode variables
+	("decay", c_double),
+	("PureDecay", c_int) # logical
     ]
 
     def copy(self):
@@ -311,7 +314,7 @@ class CAMBparams(CAMB_Structure):
                       neutrino_hierarchy = 'degenerate', num_massive_neutrinos=1,
                       mnu=0.06, nnu=3.046,
                       YHe=None, meffsterile=0, standard_neutrino_neff=3.046, TCMB=constants.COBE_CMBTemp, tau=None,
-                      tau_neutron=bbn.tau_n):
+                      tau_neutron=bbn.tau_n, dscalarAmp=0.2, dscalarPure=False):
         """
         Sets cosmological parameters in terms of physical densities and parameters used in Planck 2015 analysis.
         Default settings give a single distinct neutrino mass eigenstate, by default one neutrino with mnu = 0.06eV.
@@ -335,6 +338,9 @@ class CAMBparams(CAMB_Structure):
         :param TCMB: CMB temperature (in Kelvin)
         :param tau: optical depth; if None, current Reion settings are not changed
         :param tau_neutron: neutron lifetime, for setting YHe using BBN consistency
+	#Darsh 2017
+	:param dscalarAmp: sets the amplitude of the ratio of decaying mode to growing mode
+	:param dscalarPure: turns on the decaying mode, if set to true uses ONLY the decaying mode
         """
 
         if YHe is None:
@@ -373,6 +379,9 @@ class CAMBparams(CAMB_Structure):
         fac = (self.H0 / 100.0) ** 2
         self.omegab = ombh2 / fac
         self.omegac = omch2 / fac
+        #Darsh 2017
+        self.decay = dscalarAmp
+        self.PureDecay = dscalarPure
 
         neutrino_mass_fac = 94.07
         # conversion factor for thermal with Neff=3 TCMB=2.7255

@@ -1636,8 +1636,8 @@
          !Decaying mode 
 
          !Defining variables
-         dphase = 0.0
-         !phase=1.573
+         dphase = 0.785
+         !phase=0.785
          chi=1  !Get transfer function for chi
 
          dgama=sqrt(32.*Rv/5. -1.)
@@ -1651,13 +1651,13 @@
          !Modified equations
          !note to self (PDM): not sure if we should include the factor EV%Kf(1) in the decaying mode or not. It is 1
          !for a flat Universe, so I guess it does not matter now
-         initv(1,i_clxg) =-chi*EV%Kf(1)/3.*x2*(1.+ CP%Decay/xhalf*dsn) !Check
-         initv(1,i_clxr) =-chi*EV%Kf(1)*x2/3.*(1.+ CP%Decay/xhalf*((4*Rv-5)/20./Rv*dsn + (dgama*dcsn)/(4.*Rv)) ) !Check 
+         initv(1,i_clxg) =-chi*EV%Kf(1)/3.*x2*(1.+ CP%Decay/xhalf*dsn) !Check!
+         initv(1,i_clxr) =-chi*EV%Kf(1)*x2/3.*(1.+ CP%Decay/(2.*xhalf)*((8*Rv-5)/20./Rv*dsn + (dgama*dcsn)/(4.*Rv)) ) !Check - changed 4*Rv to 8*Rv and put in factor of 1/2 outside D
          initv(1,i_clxb) = 0.75_dl*initv(1,i_clxg)!Check
          initv(1,i_clxc) = initv(1,i_clxb)        !Check
          initv(1,i_qg)   =-chi*x2/27. + chi*(2.*CP%Decay*x2*xhalf/(9.*(25.+dgama2)))*(dgama*dcsn - 5.*dsn) !Check
-         initv(1,i_qr)   =-chi*EV%Kf(1)*((4.*Rv+23.)/Rp15*x3/27 + (CP%Decay*xhalf/24.*Rv)*((-3. - 72.*Rv/5.)*dsn + &
-              dgama*(3.-8.*Rv/5.)*dcsn)) !Check 
+         initv(1,i_qr)   =-chi*EV%Kf(1)*((4.*Rv+23.)/Rp15*x3/27 - (CP%Decay*xhalf/24.*Rv)*((-3. - 72.*Rv/5.)*dsn + &
+            dgama*(3.-8.*Rv/5.)*dcsn)) !Check - changed minus sign in front of D 
          initv(1,i_vb)   = 0.75_dl*initv(1,i_qg) !Check; PDM not sure about this. 
          initv(1,i_pir)  = chi*(4._dl/3*x2/Rp15 + (CP%Decay/xhalf)*(dgama*dcsn/2. + (11-16.*Rv/5.)*dsn/10.)) !Check
          initv(1,i_aj3r) = chi*(4/21._dl/Rp15*x3) !Check 
