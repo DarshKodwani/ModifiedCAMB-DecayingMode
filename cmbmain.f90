@@ -732,6 +732,8 @@
     ! Maximum and minimum k-values.
     if (CP%flat) then
         qmax=maximum_qeta/CP%tau0
+        !DK 2017: So here the minimum k values are give - if the divergence is happening at low k, changing this might be what we need. 
+        !DEFAULT: qmin=qmin0/CP%tau0/initAccuracyBoost
         qmin=qmin0/CP%tau0/initAccuracyBoost
     else
         qmax=maximum_qeta/CP%r/CP%chi0
@@ -804,6 +806,8 @@
 
     SourceAccuracyBoost = AccuracyBoost
     if (CP%WantScalars .and. CP%Reion%Reionization .and. CP%AccuratePolarization) then
+    !DK 2017: Change dlnk0 to get acurrate boost
+        !Def: dlnk0=2._dl/10/SourceAccuracyBoost
         dlnk0=2._dl/10/SourceAccuracyBoost
         !Need this to get accurate low l polarization
     else
@@ -1490,8 +1494,9 @@
             tmin=CP%tau0-xlmax1/IV%q
             tmin=max(TimeSteps%points(2),tmin)
         end if
+        !DEFAULT: tmax=CP%tau0-xlim/IV%q !DK 2017: See if we can remove this (this optimizes the code such that the intergation is only done till necessary) tmax = CP%tau0, where tau0 - this is what class does.
         tmax=CP%tau0-xlim/IV%q
-        tmax=min(CP%tau0,tmax)
+        tmax=min(CP%tau0,tmax) 
         tmin=max(TimeSteps%points(2),tmin)
 
         if (tmax < TimeSteps%points(2)) exit

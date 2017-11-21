@@ -1653,7 +1653,7 @@
          !for a flat Universe, so I guess it does not matter now
          initv(1,i_clxg) =-chi*EV%Kf(1)/3.*x2*(1.+ CP%Decay/xhalf*dsn) !Check!
          initv(1,i_clxr) =-chi*EV%Kf(1)*x2/3.*(1.+ CP%Decay/(2.*xhalf)*((8*Rv-5)/20./Rv*dsn + (dgama*dcsn)/(4.*Rv)) ) !Check - changed 4*Rv to 8*Rv and put in factor of 1/2 outside D
-         initv(1,i_clxb) = 0.75_dl*initv(1,i_clxg)!Check
+	 initv(1,i_clxb) = 0.75_dl*initv(1,i_clxg)!Check
          initv(1,i_clxc) = initv(1,i_clxb)        !Check
          initv(1,i_qg)   =-chi*x2/27. + chi*(2.*CP%Decay*x2*xhalf/(9.*(25.+dgama2)))*(dgama*dcsn - 5.*dsn) !Check
          initv(1,i_qr)   =-chi*EV%Kf(1)*((4.*Rv+23.)/Rp15*x3/27 - (CP%Decay*xhalf/24.*Rv)*((-3. - 72.*Rv/5.)*dsn + &
@@ -1663,7 +1663,7 @@
          initv(1,i_aj3r) = chi*(4/21._dl/Rp15*x3) !Check 
          initv(1,i_eta)  =-chi*EV%Kf(1)*(2*(1. - x2/12*(-10._dl/Rp15 + EV%Kf(1))) + &
               (CP%Decay/xhalf)*((11-16.*Rv/5.)*dsn/8. + 5.*dgama*dcsn/8.)) !Check
-
+	
       else !just consider growing mode
 
          chi=1  !Get transfer function for chi

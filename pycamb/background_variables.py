@@ -6,7 +6,7 @@ sys.path.insert(0,os.path.realpath(os.path.join(os.getcwd(),'..')))
 import camb
 from camb import model, initialpower
 
-pars = camb.set_params(H0=67.5, ombh2=0.022, omch2=0.122, As=2e-9, ns=0.95)
+pars = camb.set_params(H0=67.5, ombh2=0.022, omch2=0.122, As=2e-9, ns=0.95, dscalarAmp=0.0, dscalarPure=True)
 data= camb.get_background(pars)
 
 
@@ -23,5 +23,5 @@ def plot_ev(ev, k):
     plt.xlabel(r'$z$');
     plt.legend([r'$\Delta_c$', r'$\Delta_\gamma$', r'$\Delta_b$', r'$\Delta_\nu$'], loc = 'upper right');
     plt.show()
-k=0.02
+k=0.2
 plot_ev(data.get_redshift_evolution(k, z, ['delta_cdm','delta_photon', 'delta_baryon', 'delta_nu']),k)

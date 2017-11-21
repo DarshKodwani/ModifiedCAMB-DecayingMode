@@ -1,4 +1,5 @@
 import sys, platform, os
+import matplotlib
 from matplotlib import pyplot as plt
 import numpy as np
 #uncomment this if you are running remotely and want to keep in synch with repo changes
@@ -11,8 +12,9 @@ from camb import model, initialpower
 
 pars = camb.CAMBparams()
 #This function sets up CosmoMC-like settings, with one massive neutrino and helium set using BBN consistency
-pars.set_cosmology(H0=67.5, ombh2=0.022, omch2=0.122, mnu=0.06, omk=0, tau=0.06, dscalarAmp=0.2)
-pars.InitPower.set_params(ns=0.965, r=0)
+pars.set_cosmology(H0=67.5, ombh2=0.022, omch2=0.122, mnu=0.06, omk=0, tau=0.06, dscalarAmp=0., dscalarPure=False)
+pars.set_accuracy(lSampleBoost=1., lAccuracyBoost=1.0, AccuracyBoost = 1.)
+pars.InitPower.set_params(ns=2, r=0)
 pars.set_for_lmax(2500, lens_potential_accuracy=0);
 
 
