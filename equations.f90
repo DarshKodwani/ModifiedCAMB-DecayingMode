@@ -1677,7 +1677,7 @@
          initv(1,i_pir)  = chi*4._dl/3*x2/Rp15*(1+omtau/4*(4*Rv-5)/(2*Rv+15))
          initv(1,i_aj3r) = chi*4/21._dl/Rp15*x3
          initv(1,i_eta)  =-chi*2*EV%Kf(1)*(1 - x2/12*(-10._dl/Rp15 + EV%Kf(1)))
-      endif
+      end if
       !Darsh 2017
       !Removing omega (omtau)
       !initv(1,i_clxg)=-chi*EV%Kf(1)/3*x2
