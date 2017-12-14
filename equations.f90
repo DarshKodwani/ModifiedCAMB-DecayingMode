@@ -1361,8 +1361,8 @@
         (3.D0/16.D0*ddvis(j)*pig+9.D0/8.D0*ddvis(j)*ypol(2))/k**2+21.D0/10.D0/k/EV%Kf(1)*vis(j)*etak
 
     ! Doppler term
-       sources(1)=  (sigma+vb)/k*dvis(j)+((-2.D0*adotoa*sigma+vbdot)/k-1.D0/k**2*dgpi)*vis(j) &
-             +1.D0/k/EV%Kf(1)*vis(j)*etak
+       !sources(1)=  (sigma+vb)/k*dvis(j)+((-2.D0*adotoa*sigma+vbdot)/k-1.D0/k**2*dgpi)*vis(j) &
+       !      +1.D0/k/EV%Kf(1)*vis(j)*etak
 
     !Equivalent full result
     !    t4 = 1.D0/adotoa
